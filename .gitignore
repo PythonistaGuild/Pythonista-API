@@ -161,6 +161,3 @@ cython_debug/
 
 # Config
 config.toml
-
-# Poetry
-poetry.lock
