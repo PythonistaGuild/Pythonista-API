@@ -21,18 +21,36 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import logging
-from typing import TextIO
+from typing import Any, Self
 
-from .config import config
-from .database import *
-from .logger import ColourFormatter
-from .utils import *
+import asyncpg
+
+from core.config import config
 
 
-# Setup root logging formatter...
-handler: logging.StreamHandler[TextIO] = logging.StreamHandler()
-handler.setFormatter(ColourFormatter())
+logger: logging.Logger = logging.getLogger(__name__)
 
-logger: logging.Logger = logging.getLogger()
-logger.addHandler(handler)
-logger.setLevel(config['LOGGING']['level'])
+
+class Database:
+
+    _pool: asyncpg.Pool
+
+    async def __aenter__(self) -> Self:
+        await self.setup()
+        return self
+
+    async def __aexit__(self, *args: Any) -> None:
+        await self._pool.close()
+
+    async def setup(self) -> Self:
+        logger.info('Setting up Database.')
+
+        self._pool = await asyncpg.create_pool(dsn=config['DATABASE']['dsn'])  # type: ignore
+
+        async with self._pool.acquire() as connection:
+            with open('core/database/SCHEMA.sql', 'r') as schema:
+                await connection.execute(schema.read())
+
+        logger.info('Completed Database Setup.')
+
+        return self
