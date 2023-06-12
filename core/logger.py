@@ -24,11 +24,10 @@ DEALINGS IN THE SOFTWARE.
 import logging
 
 
-__all__ = ('ColourFormatter', )
+__all__ = ("ColourFormatter",)
 
 
 class ColourFormatter(logging.Formatter):
-
     # ANSI codes are a bit weird to decipher if you're unfamiliar with them, so here's a refresher
     # It starts off with a format like \x1b[XXXm where XXX is a semicolon separated list of commands
     # The important ones here relate to colour.
@@ -39,25 +38,25 @@ class ColourFormatter(logging.Formatter):
     # 1 means bold, 2 means dim, 0 means reset, and 4 means underline.
 
     LEVEL_COLOURS = [
-        (logging.DEBUG, '\x1b[42m'),
-        (logging.INFO, '\x1b[44m'),
-        (logging.WARNING, '\x1b[43m'),
-        (logging.ERROR, '\x1b[41m'),
-        (logging.CRITICAL, '\x1b[41m'),
+        (logging.DEBUG, "\x1b[42m"),
+        (logging.INFO, "\x1b[44m"),
+        (logging.WARNING, "\x1b[43m"),
+        (logging.ERROR, "\x1b[41m"),
+        (logging.CRITICAL, "\x1b[41m"),
     ]
 
     FORMATS = {
         level: logging.Formatter(
-            f'\x1b[40m[%(asctime)s] '
-            f'\x1b[0m{colour}\x1b[30m[%(levelname)-8s]'
-            f'\x1b[0m\x1b[40m\x1b[37;2m %(name)-15s'
-            f'\x1b[0m: %(message)s',
-            '%Y-%m-%d %H:%M:%S',
+            f"\x1b[40m[%(asctime)s] "
+            f"\x1b[0m{colour}\x1b[30m[%(levelname)-8s]"
+            f"\x1b[0m\x1b[40m\x1b[37;2m %(name)-15s"
+            f"\x1b[0m: %(message)s",
+            "%Y-%m-%d %H:%M:%S",
         )
         for level, colour in LEVEL_COLOURS
     }
 
-    def format(self, record):
+    def format(self, record: logging.LogRecord) -> str:
         formatter = self.FORMATS.get(record.levelno)
         if formatter is None:
             formatter = self.FORMATS[logging.DEBUG]
@@ -65,7 +64,7 @@ class ColourFormatter(logging.Formatter):
         # Override the traceback to always print in red
         if record.exc_info:
             text = formatter.formatException(record.exc_info)
-            record.exc_text = f'\x1b[31m{text}\x1b[0m'
+            record.exc_text = f"\x1b[31m{text}\x1b[0m"
 
         output = formatter.format(record)
 

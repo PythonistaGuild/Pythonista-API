@@ -1,0 +1,39 @@
+[tool.poetry]
+name = "pythonista-api"
+version = "0.1.0"
+authors = ["EvieePy <29671945+EvieePy@users.noreply.github.com>"]
+description = "The api that runs the Pythonista guild!"
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+aiohttp = "*"
+asyncpg = "*"
+starlette = "*"
+uvicorn = "*"
+
+[tool.poetry.group.dev.dependencies]
+black = "*"
+isort = "*"
+"asyncpg-stubs" = "*"
+
+[tool.black]
+line-length = 125
+
+[tool.isort]
+profile = "black"
+lines_after_imports = 2
+line_length = 125
+combine_as_imports = true
+combine_star = true
+
+
+[tool.pyright]
+useLibraryCodeForTypes = true
+typeCheckingMode = "strict"
+pythonVersion = "3.11"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
