@@ -59,7 +59,7 @@ class _Route:
         await request.app.database.add_log(request=request, response=response)
 
 
-def route(path: str, /, *, methods: list[str] | None = ['GET'], prefix: bool = True) -> Callable[..., _Route]:
+def route(path: str, /, *, methods: list[str] = ['GET'], prefix: bool = True) -> Callable[..., _Route]:
     """Decorator which allows a coroutine to be turned into a `starlette.routing.Route` inside a `core.View`.
 
     Parameters
