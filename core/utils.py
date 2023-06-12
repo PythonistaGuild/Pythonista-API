@@ -172,7 +172,7 @@ class Application(Starlette):
         self._prefix: str = kwargs.pop('prefix', '')
         views: list[View] = kwargs.pop('views', [])
 
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)  # type: ignore
 
         for view in views:
             self.add_view(view)
