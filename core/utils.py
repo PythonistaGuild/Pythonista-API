@@ -22,7 +22,8 @@ SOFTWARE.
 """
 import asyncio
 import inspect
-from typing import Any, Awaitable, Callable, Iterator, Self
+from collections.abc import Callable, Coroutine, Iterator
+from typing import Any, Self, TypeAlias
 
 from starlette.requests import Request
 from starlette.responses import Response
@@ -35,12 +36,13 @@ __all__ = (
     'View',
 )
 
+ResponseType: TypeAlias = Coroutine[Any, Any, Response]
+
 
 class _Route:
-
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         self._path: str = kwargs['path']
-        self._coro: Callable[[Any, Request], Awaitable[Response]] = kwargs['coro']
+        self._coro: Callable[[Any, Request], ResponseType] = kwargs['coro']
         self._methods: list[str] = kwargs['methods']
         self._prefix: bool = kwargs['prefix']
 
@@ -53,7 +55,7 @@ class _Route:
         await response(scope, receive, send)
 
 
-def route(path: str, /, *, methods: list[str] | None = None, prefix: bool = True) -> Callable[..., _Route]:
+def route(path: str, /, *, methods: list[str] = ['GET'], prefix: bool = True) -> Callable[..., _Route]:
     """Decorator which allows a coroutine to be turned into a `starlette.routing.Route` inside a `core.View`.
 
     Parameters
@@ -61,23 +63,21 @@ def route(path: str, /, *, methods: list[str] | None = None, prefix: bool = True
     path: str
         The path to this route. By default, the path is prefixed with the View class name.
     methods: list[str]
-        The allowed methods for this route. If this is None, this route will default to 'GET'. Defaults to None.
+        The allowed methods for this route. Defaults to ``['GET']``.
     prefix: bool
         Whether the route path should be prefixed with the View class name. Defaults to True.
     """
 
-    if methods is None:
-        methods = ['GET']
-
-    def decorator(coro: Callable[[Any, Request], Awaitable[Response]]) -> _Route:
+    def decorator(coro: Callable[[Any, Request], ResponseType]) -> _Route:
         if not asyncio.iscoroutinefunction(coro):
-            raise RuntimeError('Route must be a coroutine function.')
+            raise RuntimeError('Route callback must be a coroutine function.')
 
-        disallowed: list[str] = ["get", "post", "put", "patch", "delete", "options"]
+        disallowed: list[str] = ['get', 'post', 'put', 'patch', 'delete', 'options']
         if coro.__name__.lower() in disallowed:
-            raise ValueError(f'Route coroutine must not be named any: {", ".join(disallowed)}')
+            raise ValueError(f'Route callback function must not be named any: {", ".join(disallowed)}')
 
         return _Route(path=path, coro=coro, methods=methods, prefix=prefix)
+
     return decorator
 
 
@@ -106,9 +106,9 @@ class View:
 
     __routes__: list[Route]
 
-    def __new__(cls, *args, **kwargs) -> Self:
-        self: Self = super().__new__(cls)
-        name: str = cls.__name__
+    def __new__(cls, *args: Any, **kwargs: Any) -> Self:
+        self = super().__new__(cls)
+        name = cls.__name__
 
         self.__routes__ = []
 
@@ -125,12 +125,9 @@ class View:
                 # Due to the way Starlette works, this allows us to have schema documentation...
                 setattr(member, method, member._coro)
 
-            self.__routes__.append(Route(
-                path=path,
-                endpoint=member,
-                methods=member._methods,
-                name=f'{name}.{member._coro.__name__}'
-            ))
+            self.__routes__.append(
+                Route(path=path, endpoint=member, methods=member._methods, name=f'{name}.{member._coro.__name__}')
+            )
 
         return self
 
@@ -143,5 +140,5 @@ class View:
     def __len__(self) -> int:
         return len(self.__routes__)
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self) -> Iterator[Route]:
         return iter(self.__routes__)

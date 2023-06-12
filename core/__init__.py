@@ -21,6 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import logging
+from typing import TextIO
 
 from .config import config
 from .logger import ColourFormatter
@@ -28,7 +29,7 @@ from .utils import *
 
 
 # Setup root logging formatter...
-handler: logging.StreamHandler = logging.StreamHandler()
+handler: logging.StreamHandler[TextIO] = logging.StreamHandler()
 handler.setFormatter(ColourFormatter())
 
 logger: logging.Logger = logging.getLogger()
