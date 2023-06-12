@@ -32,7 +32,11 @@ from starlette.routing import Route
 from starlette.types import Receive, Scope, Send
 
 
-__all__ = ('route', 'View', 'Application')
+__all__ = (
+    'route',
+    'View',
+    'Application',
+)
 
 ResponseType: TypeAlias = Coroutine[Any, Any, Response]
 
@@ -136,7 +140,7 @@ class View:
         return self.__class__.__name__.lower()
 
     def __repr__(self) -> str:
-        return f"View: name={self.__class__.__name__}, routes={self.__routes__}"
+        return f'View: name={self.__class__.__name__}, routes={self.__routes__}'
 
     def __getitem__(self, index: int) -> Route:
         return self.__routes__[index]
