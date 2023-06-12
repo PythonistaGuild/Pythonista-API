@@ -5,3 +5,10 @@
 # 10 = DEBUG
 [LOGGING]
 level = 20
+
+[SERVER]
+port = 2700
+prefix = '/api'
+
+[DATABASE]
+dsn = ''
