@@ -55,7 +55,7 @@ class _Route:
         await response(scope, receive, send)
 
 
-def route(path: str, /, *, methods: list[str] | None = ['GET'], prefix: bool = True) -> Callable[..., _Route]:
+def route(path: str, /, *, methods: list[str] = ['GET'], prefix: bool = True) -> Callable[..., _Route]:
     """Decorator which allows a coroutine to be turned into a `starlette.routing.Route` inside a `core.View`.
 
     Parameters
