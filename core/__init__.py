@@ -36,4 +36,4 @@ handler.setFormatter(ColourFormatter())
 
 logger: logging.Logger = logging.getLogger()
 logger.addHandler(handler)
-logger.setLevel(config["LOGGING"]["level"])
+logger.setLevel(config['LOGGING']['level'])
