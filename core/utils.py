@@ -126,7 +126,7 @@ class View:
                 setattr(member, method, member._coro)
 
             self.__routes__.append(
-                Route(path=path, endpoint=member, methods=member._methods, name=f"{name}.{member._coro.__name__}")
+                Route(path=path, endpoint=member, methods=member._methods, name=f'{name}.{member._coro.__name__}')
             )
 
         return self
