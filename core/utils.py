@@ -32,8 +32,8 @@ from starlette.types import Receive, Scope, Send
 
 
 __all__ = (
-    "route",
-    "View",
+    'route',
+    'View',
 )
 
 ResponseType: TypeAlias = Coroutine[Any, Any, Response]
@@ -41,10 +41,10 @@ ResponseType: TypeAlias = Coroutine[Any, Any, Response]
 
 class _Route:
     def __init__(self, **kwargs: Any) -> None:
-        self._path: str = kwargs["path"]
-        self._coro: Callable[[Any, Request], ResponseType] = kwargs["coro"]
-        self._methods: list[str] = kwargs["methods"]
-        self._prefix: bool = kwargs["prefix"]
+        self._path: str = kwargs['path']
+        self._coro: Callable[[Any, Request], ResponseType] = kwargs['coro']
+        self._methods: list[str] = kwargs['methods']
+        self._prefix: bool = kwargs['prefix']
 
         self._view: View | None = None
 
@@ -55,7 +55,7 @@ class _Route:
         await response(scope, receive, send)
 
 
-def route(path: str, /, *, methods: list[str] | None = ["GET"], prefix: bool = True) -> Callable[..., _Route]:
+def route(path: str, /, *, methods: list[str] | None = ['GET'], prefix: bool = True) -> Callable[..., _Route]:
     """Decorator which allows a coroutine to be turned into a `starlette.routing.Route` inside a `core.View`.
 
     Parameters
@@ -70,11 +70,11 @@ def route(path: str, /, *, methods: list[str] | None = ["GET"], prefix: bool = T
 
     def decorator(coro: Callable[[Any, Request], ResponseType]) -> _Route:
         if not asyncio.iscoroutinefunction(coro):
-            raise RuntimeError("Route must be a coroutine function.")
+            raise RuntimeError('Route callback must be a coroutine function.')
 
-        disallowed: list[str] = ["get", "post", "put", "patch", "delete", "options"]
+        disallowed: list[str] = ['get', 'post', 'put', 'patch', 'delete', 'options']
         if coro.__name__.lower() in disallowed:
-            raise ValueError(f'Route coroutine must not be named any: {", ".join(disallowed)}')
+            raise ValueError(f'Route callback function must not be named any: {", ".join(disallowed)}')
 
         return _Route(path=path, coro=coro, methods=methods, prefix=prefix)
 
@@ -132,7 +132,7 @@ class View:
         return self
 
     def __repr__(self) -> str:
-        return f"View: name={self.__class__.__name__}, routes={self.__routes__}"
+        return f'View: name={self.__class__.__name__}, routes={self.__routes__}'
 
     def __getitem__(self, index: int) -> Route:
         return self.__routes__[index]

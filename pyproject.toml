@@ -20,6 +20,7 @@ isort = "*"
 
 [tool.black]
 line-length = 125
+skip-string-normalization = true
 
 [tool.isort]
 profile = "black"
