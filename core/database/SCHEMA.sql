@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 
 CREATE TABLE IF NOT EXISTS users (
-    id BIGINT PRIMARY KEY,
+    uid BIGINT PRIMARY KEY,
     github_id TEXT UNIQUE NOT NULL,
     admin BOOLEAN NOT NULL DEFAULT false,
     bearer TEXT NOT NULL,
@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS users (
 
 
 CREATE TABLE IF NOT EXISTS tokens (
-    id SERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES users(id),
+    tid SERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(uid),
     token_name VARCHAR(32) NOT NULL CHECK (LENGTH(token_name) > 2),
     token_description VARCHAR(256),
     token TEXT NOT NULL,
