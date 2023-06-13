@@ -12,3 +12,8 @@ prefix = '/api'
 
 [DATABASE]
 dsn = ''
+
+[OAUTH]
+github_id = ""
+github_secret = ""
+redirect = ""
