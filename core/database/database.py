@@ -20,11 +20,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+import datetime
 import logging
 from typing import Any, Self
 
 import asyncpg
 
+import core
 from core.config import config
 
 from .models import *
@@ -57,11 +59,17 @@ class Database:
 
         return self
 
-    async def fetch_user(self, *, uid: int | None = None, bearer: str | None = None) -> UserModel | None:
-        query: str = """SELECT * FROM users WHERE uid = $1 OR bearer = $2"""
+    async def fetch_user(
+            self,
+            *,
+            uid: int | None = None,
+            bearer: str | None = None,
+            github_id: int | None = None
+    ) -> UserModel | None:
+        query: str = """SELECT * FROM users WHERE uid = $1 OR bearer = $2 OR github_id = $3"""
 
         async with self._pool.acquire() as connection:
-            row: asyncpg.Record = await connection.fetchrow(query, uid, bearer)
+            row: asyncpg.Record = await connection.fetchrow(query, uid, bearer, github_id)
 
         if not row:
             return None
@@ -82,3 +90,14 @@ class Database:
             return None
 
         return ApplicationModel(record=row)
+
+    async def create_user(self, *, github_id: int) -> UserModel:
+        uid: int = int((datetime.datetime.utcnow().timestamp() * 1000) - core.EPOCH)
+        bearer: str = core.generate_token(uid)
+
+        query: str = """INSERT INTO users(uid, github_id, bearer) VALUES ($1, $2, $3) RETURNING *"""
+
+        async with self._pool.acquire() as connection:
+            row: asyncpg.Record = await connection.fetchrow(query, uid, github_id, bearer)
+
+        return UserModel(record=row)
