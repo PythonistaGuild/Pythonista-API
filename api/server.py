@@ -21,8 +21,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import aiohttp
+from starlette.middleware import Middleware
+from starlette.middleware.authentication import AuthenticationMiddleware
+from starlette.middleware.cors import CORSMiddleware
 
 import core
+
+from .routes.users import Users
+from .middleware.auth import AuthBackend
 
 
 class Server(core.Application):
@@ -31,4 +37,10 @@ class Server(core.Application):
         self.session = session
         self.database = database
 
-        super().__init__(prefix=core.config['SERVER']['prefix'])
+        views: list[core.View] = [Users(self)]
+        middleware: list[Middleware] = [
+            Middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*']),
+            Middleware(AuthenticationMiddleware, backend=AuthBackend(self))
+        ]
+
+        super().__init__(prefix=core.config['SERVER']['prefix'], views=views, middleware=middleware)
