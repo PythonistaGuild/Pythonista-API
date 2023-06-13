@@ -163,7 +163,7 @@ class Database:
 
         query: str = """
         WITH create_application AS (
-         INSERT INTO tokens(user_id, token_name, token_description, token) VALUES ($1, $2, $3, $4) RETURNING *   
+         INSERT INTO tokens(user_id, token_name, token_description, token) VALUES ($1, $2, $3, $4) RETURNING *
         )
         SELECT * FROM create_application
         JOIN users u ON u.uid = create_application.user_id
