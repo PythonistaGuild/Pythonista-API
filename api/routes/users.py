@@ -20,20 +20,36 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-import logging
-from typing import TextIO
+from __future__ import annotations
 
-from .config import config
-from .database import *
-from .logger import ColourFormatter
-from .utils import *
-from .tokens import *
+from typing import TYPE_CHECKING
+
+from starlette.authentication import requires
+from starlette.requests import Request
+from starlette.responses import JSONResponse, Response
+
+import core
 
 
-# Setup root logging formatter...
-handler: logging.StreamHandler[TextIO] = logging.StreamHandler()
-handler.setFormatter(ColourFormatter())
+if TYPE_CHECKING:
+    from api.server import Server
 
-logger: logging.Logger = logging.getLogger()
-logger.addHandler(handler)
-logger.setLevel(config['LOGGING']['level'])
+
+class Users(core.View):
+
+    def __init__(self, app: Server) -> None:
+        self.app = app
+
+    @core.route('/@me')
+    @requires('bearer')
+    async def at_me(self, request: Request) -> Response:
+        user: core.UserModel = request.user.model
+
+        return JSONResponse(user.as_dict(), status_code=200)
+
+    @core.route('/@me/application')
+    @requires('application')
+    async def at_me_app(self, request: Request) -> Response:
+        application: core.ApplicationModel = request.user.model
+
+        return JSONResponse(application.as_dict(), status_code=200)

@@ -20,20 +20,5 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-import logging
-from typing import TextIO
-
-from .config import config
-from .database import *
-from .logger import ColourFormatter
-from .utils import *
-from .tokens import *
-
-
-# Setup root logging formatter...
-handler: logging.StreamHandler[TextIO] = logging.StreamHandler()
-handler.setFormatter(ColourFormatter())
-
-logger: logging.Logger = logging.getLogger()
-logger.addHandler(handler)
-logger.setLevel(config['LOGGING']['level'])
+from .database import Database
+from .models import *

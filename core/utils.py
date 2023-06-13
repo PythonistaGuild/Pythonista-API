@@ -25,6 +25,7 @@ import inspect
 from collections.abc import Callable, Coroutine, Iterator
 from typing import Any, Self, TypeAlias
 
+from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
@@ -34,6 +35,7 @@ from starlette.types import Receive, Scope, Send
 __all__ = (
     'route',
     'View',
+    'Application'
 )
 
 ResponseType: TypeAlias = Coroutine[Any, Any, Response]
@@ -131,6 +133,10 @@ class View:
 
         return self
 
+    @property
+    def name(self) -> str:
+        return self.__class__.__name__.lower()
+
     def __repr__(self) -> str:
         return f'View: name={self.__class__.__name__}, routes={self.__routes__}'
 
@@ -142,3 +148,64 @@ class View:
 
     def __iter__(self) -> Iterator[Route]:
         return iter(self.__routes__)
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, View):
+            return False
+
+        return self.name == other.name
+
+
+class Application(Starlette):
+    """The main Application which inherits from `starlette.applications.Starlette`.
+
+    Parameters
+    ----------
+    prefix: Optional[str]
+        The base path prefix to add to all view based routes.
+    views: Optional[list[View]]
+        The views to add to this Application.
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        self._views: list[View] = []
+        self._prefix: str = kwargs.pop('prefix', '')
+        views: list[View] = kwargs.pop('views', [])
+
+        super().__init__(*args, **kwargs)  # type: ignore
+
+        for view in views:
+            self.add_view(view)
+
+    @property
+    def prefix(self) -> str:
+        """Returns the Application path prefix if set.
+
+        This can not be set after initialisation.
+        """
+        return self._prefix
+
+    @property
+    def views(self) -> list[View]:
+        """Returns a list of the currently added views on this Application.
+
+        This can not be set after initialisation.
+        """
+        return self._views
+
+    def add_view(self, view: View) -> None:
+        """Adds a `core.View` and all it's routes to the Application.
+
+        Each view must have a unique name.
+        """
+        if view in self._views:
+            msg: str = f'A view with the name "{view.name}" has already been added to this application.'
+            raise RuntimeError(msg)
+
+        for route_ in view:
+            path: str = f'/{self._prefix.lstrip("/")}{route_.path}' if self._prefix else route_.path
+            new: Route = Route(path, endpoint=route_.endpoint, methods=route_.methods, name=route_.name)
+
+            self.router.routes.append(new)
+
+        self._views.append(view)

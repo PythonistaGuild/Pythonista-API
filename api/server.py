@@ -20,20 +20,28 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-import logging
-from typing import TextIO
+import aiohttp
+from starlette.middleware import Middleware
+from starlette.middleware.authentication import AuthenticationMiddleware
+from starlette.middleware.cors import CORSMiddleware
 
-from .config import config
-from .database import *
-from .logger import ColourFormatter
-from .utils import *
-from .tokens import *
+import core
+
+from .routes.users import Users
+from .routes.auth import Auth
+from .middleware.auth import AuthBackend
 
 
-# Setup root logging formatter...
-handler: logging.StreamHandler[TextIO] = logging.StreamHandler()
-handler.setFormatter(ColourFormatter())
+class Server(core.Application):
 
-logger: logging.Logger = logging.getLogger()
-logger.addHandler(handler)
-logger.setLevel(config['LOGGING']['level'])
+    def __init__(self, *, session: aiohttp.ClientSession, database: core.Database) -> None:
+        self.session = session
+        self.database = database
+
+        views: list[core.View] = [Users(self), Auth(self)]
+        middleware: list[Middleware] = [
+            Middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*']),
+            Middleware(AuthenticationMiddleware, backend=AuthBackend(self))
+        ]
+
+        super().__init__(prefix=core.config['SERVER']['prefix'], views=views, middleware=middleware)

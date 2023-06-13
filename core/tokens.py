@@ -20,20 +20,23 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-import logging
-from typing import TextIO
-
-from .config import config
-from .database import *
-from .logger import ColourFormatter
-from .utils import *
-from .tokens import *
+import base64
+import secrets
 
 
-# Setup root logging formatter...
-handler: logging.StreamHandler[TextIO] = logging.StreamHandler()
-handler.setFormatter(ColourFormatter())
+__all__ = (
+    'EPOCH',
+    'generate_token'
+)
 
-logger: logging.Logger = logging.getLogger()
-logger.addHandler(handler)
-logger.setLevel(config['LOGGING']['level'])
+
+EPOCH: int = 1686613974737  # 2023-06-13 09:52:54.737703 * 1000 (Milliseconds) UTC
+
+
+def generate_token(user_id: int) -> str:
+    prefix: str = base64.b64encode(str(user_id).encode(encoding='UTF-8')).decode(encoding='UTF-8')
+
+    secret: str = secrets.token_urlsafe(128)
+    token: str = f'{prefix}.{secret}'
+
+    return token

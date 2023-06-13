@@ -20,20 +20,23 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-import logging
-from typing import TextIO
+import asyncio
 
-from .config import config
-from .database import *
-from .logger import ColourFormatter
-from .utils import *
-from .tokens import *
+import aiohttp
+import uvicorn
+
+import core
+import api
 
 
-# Setup root logging formatter...
-handler: logging.StreamHandler[TextIO] = logging.StreamHandler()
-handler.setFormatter(ColourFormatter())
+async def main() -> None:
+    async with aiohttp.ClientSession() as session, core.Database() as database:
+        app: api.Server = api.Server(session=session, database=database)
 
-logger: logging.Logger = logging.getLogger()
-logger.addHandler(handler)
-logger.setLevel(config['LOGGING']['level'])
+        config = uvicorn.Config(app, port=core.config['SERVER']['port'])
+        server = uvicorn.Server(config)
+        await server.serve()
+
+
+if __name__ == '__main__':
+    asyncio.run(main())
