@@ -204,8 +204,8 @@ class Application(Starlette):
 
         for route_ in view:
             path: str = f'/{self._prefix.lstrip("/")}{route_.path}' if self._prefix else route_.path
-            route_.path = path
+            new: Route = Route(path, endpoint=route_.endpoint, methods=route_.methods, name=route_.name)
 
-            self.router.routes.append(route_)
+            self.router.routes.append(new)
 
         self._views.append(view)
