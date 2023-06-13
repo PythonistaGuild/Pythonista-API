@@ -91,10 +91,9 @@ class Auth(core.View):
 
             data = await resp.json()
             userid = data["id"]
+            username = data["name"] or data["login"]
 
-        user = await self.app.database.fetch_user(github_id=userid)
-        if not user:
-            user = await self.app.database.create_user(github_id=userid)
-            logger.info(f'Created new user: id={user.uid} github_id={user.github_id}')
+        user = await self.app.database.refresh_or_create_user(github_id=userid, username=username)
+        logger.info(f'Refreshed Bearer: id={user.uid} github_id={user.github_id} username={username}')
 
         return JSONResponse(user.as_dict(), status_code=200)
