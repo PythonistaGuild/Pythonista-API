@@ -5,6 +5,7 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE TABLE IF NOT EXISTS users (
     uid BIGINT PRIMARY KEY,
     github_id BIGINT UNIQUE NOT NULL,
+    username TEXT NOT NULL,
     admin BOOLEAN NOT NULL DEFAULT false,
     bearer TEXT NOT NULL,
     created TIMESTAMP DEFAULT (now() at time zone 'utc')

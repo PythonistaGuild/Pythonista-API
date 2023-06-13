@@ -20,6 +20,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+from __future__ import annotations
+
 import datetime
 import logging
 from typing import Any, Self
@@ -87,14 +89,29 @@ class Database:
 
         return ApplicationModel(record=row)
 
-    async def create_user(self, *, github_id: int) -> UserModel:
-        uid: int = int((datetime.datetime.utcnow().timestamp() * 1000) - core.EPOCH)
+    async def create_user(self, *, github_id: int, username: str) -> UserModel:
+        uid: int = int((datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000) - core.EPOCH)
         bearer: str = core.generate_token(uid)
 
-        query: str = """INSERT INTO users(uid, github_id, bearer) VALUES ($1, $2, $3) RETURNING *"""
+        query: str = """INSERT INTO users(uid, github_id, username, bearer) VALUES ($1, $2, $3, $4) RETURNING *"""
 
         async with self._pool.acquire() as connection:
-            row = await connection.fetchrow(query, uid, github_id, bearer)
+            row = await connection.fetchrow(query, uid, github_id, username, bearer)
+
+        assert row
+        return UserModel(record=row)
+
+    async def refresh_or_create_user(self, *, github_id: int, username: str) -> UserModel:
+        uid: int = int((datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000) - core.EPOCH)
+        bearer: str = core.generate_token(uid)
+
+        query: str = """
+        INSERT INTO users(uid, github_id, username, bearer) VALUES ($1, $2, $3, $4)
+        ON CONFLICT (github_id) DO UPDATE SET username = $3, bearer = $4 RETURNING *
+        """
+
+        async with self._pool.acquire() as connection:
+            row = await connection.fetchrow(query, uid, github_id, username, bearer)
 
         assert row
         return UserModel(record=row)

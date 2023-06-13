@@ -33,6 +33,7 @@ class UserModel:
     def __init__(self, record: asyncpg.Record) -> None:
         self.uid: int = record['uid']
         self.github_id: int = record['github_id']
+        self.username: str = record['username']
         self.admin: bool = record['admin']
         self.bearer: str = record['bearer']
         self.created: datetime.datetime = record['created']
@@ -41,6 +42,7 @@ class UserModel:
         return {
             'uid': self.uid,
             'github_id': self.github_id,
+            'username': self.username,
             'admin': self.admin,
             'bearer': self.bearer,
             'created': self.created.isoformat(),
