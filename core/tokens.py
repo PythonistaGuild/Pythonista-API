@@ -24,10 +24,7 @@ import base64
 import secrets
 
 
-__all__ = (
-    'EPOCH',
-    'generate_token'
-)
+__all__ = ('EPOCH', 'generate_token')
 
 
 EPOCH: int = 1686613974737  # 2023-06-13 09:52:54.737703 * 1000 (Milliseconds) UTC

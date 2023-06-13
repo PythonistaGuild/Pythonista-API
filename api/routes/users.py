@@ -36,7 +36,6 @@ if TYPE_CHECKING:
 
 
 class Users(core.View):
-
     def __init__(self, app: Server) -> None:
         self.app = app
 

@@ -27,13 +27,12 @@ from starlette.middleware.cors import CORSMiddleware
 
 import core
 
-from .routes.users import Users
-from .routes.auth import Auth
 from .middleware.auth import AuthBackend
+from .routes.auth import Auth
+from .routes.users import Users
 
 
 class Server(core.Application):
-
     def __init__(self, *, session: aiohttp.ClientSession, database: core.Database) -> None:
         self.session = session
         self.database = database
@@ -41,7 +40,7 @@ class Server(core.Application):
         views: list[core.View] = [Users(self), Auth(self)]
         middleware: list[Middleware] = [
             Middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*']),
-            Middleware(AuthenticationMiddleware, backend=AuthBackend(self))
+            Middleware(AuthenticationMiddleware, backend=AuthBackend(self)),
         ]
 
         super().__init__(prefix=core.config['SERVER']['prefix'], views=views, middleware=middleware)

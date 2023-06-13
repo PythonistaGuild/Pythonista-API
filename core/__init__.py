@@ -26,8 +26,8 @@ from typing import TextIO
 from .config import config
 from .database import *
 from .logger import ColourFormatter
-from .utils import *
 from .tokens import *
+from .utils import *
 
 
 # Setup root logging formatter...

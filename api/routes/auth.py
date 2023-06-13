@@ -72,7 +72,9 @@ class Auth(core.View):
             "Accept": "application/json",
         }
 
-        async with self.app.session.post("https://github.com/login/oauth/access_token", data=data, headers=headers) as resp:
+        async with self.app.session.post(
+            "https://github.com/login/oauth/access_token", data=data, headers=headers
+        ) as resp:
             resp.raise_for_status()
 
             data = await resp.json()
@@ -82,7 +84,9 @@ class Auth(core.View):
             except KeyError:
                 return JSONResponse({'error': 'Bad code query sent.'}, status_code=400)
 
-        async with self.app.session.get("https://api.github.com/user", headers={"Authorization": f"Bearer {token}"}) as resp:
+        async with self.app.session.get(
+            "https://api.github.com/user", headers={"Authorization": f"Bearer {token}"}
+        ) as resp:
             resp.raise_for_status()
 
             data = await resp.json()

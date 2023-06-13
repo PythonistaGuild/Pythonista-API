@@ -25,8 +25,8 @@ import asyncio
 import aiohttp
 import uvicorn
 
-import core
 import api
+import core
 
 
 async def main() -> None:
