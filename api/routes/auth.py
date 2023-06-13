@@ -25,7 +25,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from starlette.authentication import requires
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
@@ -40,7 +39,6 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Auth(core.View):
-
     def __init__(self, app: Server) -> None:
         self.app = app
 
@@ -75,9 +73,7 @@ class Auth(core.View):
         }
 
         async with self.app.session.post(
-                "https://github.com/login/oauth/access_token",
-                data=data,
-                headers=headers
+            "https://github.com/login/oauth/access_token", data=data, headers=headers
         ) as resp:
             resp.raise_for_status()
 
@@ -89,17 +85,16 @@ class Auth(core.View):
                 return JSONResponse({'error': 'Bad code query sent.'}, status_code=400)
 
         async with self.app.session.get(
-                "https://api.github.com/user",
-                headers={"Authorization": f"Bearer {token}"}
+            "https://api.github.com/user", headers={"Authorization": f"Bearer {token}"}
         ) as resp:
             resp.raise_for_status()
 
             data = await resp.json()
             userid = data["id"]
 
-        user: core.UserModel = await self.app.database.fetch_user(github_id=userid)
+        user = await self.app.database.fetch_user(github_id=userid)
         if not user:
-            user: core.UserModel = await self.app.database.create_user(github_id=userid)
+            user = await self.app.database.create_user(github_id=userid)
             logger.info(f'Created new user: id={user.uid} github_id={user.github_id}')
 
         return JSONResponse(user.as_dict(), status_code=200)

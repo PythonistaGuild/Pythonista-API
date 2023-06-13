@@ -26,14 +26,10 @@ from typing import Any
 import asyncpg
 
 
-__all__ = (
-    'UserModel',
-    'ApplicationModel'
-)
+__all__ = ('UserModel', 'ApplicationModel')
 
 
 class UserModel:
-
     def __init__(self, record: asyncpg.Record) -> None:
         self.uid: int = record['uid']
         self.github_id: int = record['github_id']
@@ -47,12 +43,11 @@ class UserModel:
             'github_id': self.github_id,
             'admin': self.admin,
             'bearer': self.bearer,
-            'created': self.created.isoformat()
+            'created': self.created.isoformat(),
         }
 
 
 class ApplicationModel(UserModel):
-
     def __init__(self, record: asyncpg.Record) -> None:
         super().__init__(record)
 
@@ -65,13 +60,15 @@ class ApplicationModel(UserModel):
 
     def as_dict(self) -> dict[str, Any]:
         user = super().as_dict()
-        user.update({
-            'tid': self.tid,
-            'name': self.name,
-            'description': self.description,
-            'token': self.token,
-            'verified': self.verified,
-            'uses': self.uses
-        })
+        user.update(
+            {
+                'tid': self.tid,
+                'name': self.name,
+                'description': self.description,
+                'token': self.token,
+                'verified': self.verified,
+                'uses': self.uses,
+            }
+        )
 
         return user

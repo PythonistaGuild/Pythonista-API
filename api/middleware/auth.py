@@ -35,13 +35,11 @@ if TYPE_CHECKING:
 
 
 class User(BaseUser):
-
     def __init__(self, model: core.UserModel) -> None:
         self.model = model
 
 
 class AuthBackend(AuthenticationBackend):
-
     def __init__(self, app: Server) -> None:
         self.app = app
 

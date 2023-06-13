@@ -32,11 +32,7 @@ from starlette.routing import Route
 from starlette.types import Receive, Scope, Send
 
 
-__all__ = (
-    'route',
-    'View',
-    'Application'
-)
+__all__ = ('route', 'View', 'Application')
 
 ResponseType: TypeAlias = Coroutine[Any, Any, Response]
 
@@ -203,8 +199,8 @@ class Application(Starlette):
             raise RuntimeError(msg)
 
         for route_ in view:
-            path: str = f'/{self._prefix.lstrip("/")}{route_.path}' if self._prefix else route_.path
-            new: Route = Route(path, endpoint=route_.endpoint, methods=route_.methods, name=route_.name)
+            path = f'/{self._prefix.lstrip("/")}{route_.path}' if self._prefix else route_.path
+            new = Route(path, endpoint=route_.endpoint, methods=route_.methods, name=route_.name)  # type: ignore # starlette types are wrong. They specify list but give a set...?
 
             self.router.routes.append(new)
 

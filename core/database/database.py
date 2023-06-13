@@ -36,8 +36,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Database:
-
-    _pool: asyncpg.Pool
+    _pool: asyncpg.Pool[asyncpg.Record]
 
     async def __aenter__(self) -> Self:
         await self.setup()
@@ -50,6 +49,7 @@ class Database:
         logger.info('Setting up Database.')
 
         self._pool = await asyncpg.create_pool(dsn=config['DATABASE']['dsn'])  # type: ignore
+        assert self._pool
 
         async with self._pool.acquire() as connection:
             with open('core/database/SCHEMA.sql', 'r') as schema:
@@ -60,16 +60,12 @@ class Database:
         return self
 
     async def fetch_user(
-            self,
-            *,
-            uid: int | None = None,
-            bearer: str | None = None,
-            github_id: int | None = None
+        self, *, uid: int | None = None, bearer: str | None = None, github_id: int | None = None
     ) -> UserModel | None:
         query: str = """SELECT * FROM users WHERE uid = $1 OR bearer = $2 OR github_id = $3"""
 
         async with self._pool.acquire() as connection:
-            row: asyncpg.Record = await connection.fetchrow(query, uid, bearer, github_id)
+            row = await connection.fetchrow(query, uid, bearer, github_id)
 
         if not row:
             return None
@@ -84,7 +80,7 @@ class Database:
         """
 
         async with self._pool.acquire() as connection:
-            row: asyncpg.Record = await connection.fetchrow(query, token)
+            row = await connection.fetchrow(query, token)
 
         if not row:
             return None
@@ -98,6 +94,7 @@ class Database:
         query: str = """INSERT INTO users(uid, github_id, bearer) VALUES ($1, $2, $3) RETURNING *"""
 
         async with self._pool.acquire() as connection:
-            row: asyncpg.Record = await connection.fetchrow(query, uid, github_id, bearer)
+            row = await connection.fetchrow(query, uid, github_id, bearer)
 
+        assert row
         return UserModel(record=row)
