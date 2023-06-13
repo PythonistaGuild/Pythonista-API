@@ -27,6 +27,8 @@ import asyncpg
 
 from core.config import config
 
+from .models import *
+
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -54,3 +56,29 @@ class Database:
         logger.info('Completed Database Setup.')
 
         return self
+
+    async def fetch_user(self, *, uid: int | None = None, bearer: str | None = None) -> UserModel | None:
+        query: str = """SELECT * FROM users WHERE uid = $1 OR bearer = $2"""
+
+        async with self._pool.acquire() as connection:
+            row: asyncpg.Record = await connection.fetchrow(query, uid, bearer)
+
+        if not row:
+            return None
+
+        return UserModel(record=row)
+
+    async def fetch_application(self, *, token: str) -> ApplicationModel | None:
+        query: str = """
+        SELECT * FROM tokens
+        LEFT OUTER JOIN users u on u.uid = tokens.user_id
+        WHERE token = $1
+        """
+
+        async with self._pool.acquire() as connection:
+            row: asyncpg.Record = await connection.fetchrow(query, token)
+
+        if not row:
+            return None
+
+        return ApplicationModel(record=row)
