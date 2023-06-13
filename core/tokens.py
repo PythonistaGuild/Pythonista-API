@@ -31,9 +31,9 @@ EPOCH: int = 1686613974737  # 2023-06-13 09:52:54.737703 * 1000 (Milliseconds) U
 
 
 def generate_token(user_id: int) -> str:
-    prefix: str = base64.b64encode(str(user_id).encode(encoding='UTF-8')).decode(encoding='UTF-8')
+    prefix: str = base64.urlsafe_b64encode(str(user_id).encode(encoding='UTF-8')).decode(encoding='UTF-8')
 
     secret: str = secrets.token_urlsafe(128)
-    token: str = f'{prefix}.{secret}'
+    token: str = f'PAPI-{prefix}.{secret}'
 
     return token
