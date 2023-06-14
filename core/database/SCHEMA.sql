@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS bans (
 );
 
 CREATE TABLE IF NOT EXISTS logs (
-    ip TEXT NOT NULL,
+    ip TEXT,
     userid BIGINT REFERENCES users(uid),
     appid BIGINT REFERENCES tokens(tid),
     accessed TIMESTAMP WITH TIME ZONE,
