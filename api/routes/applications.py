@@ -93,3 +93,13 @@ class Applications(core.View):
             return JSONResponse({'error': 'You already have an application with that name.'}, status_code=409)
 
         return JSONResponse(app.as_dict(), status_code=201)
+
+    @core.route('/logs')
+    @requires('application')
+    async def fetch_application_logs(self, request: Request) -> Response:
+        app: core.ApplicationModel = request.user.model
+
+        logs = await self.app.database.fetch_application_logs(token_id=app.tid)
+
+        logs = [log.as_dict() for log in logs]
+        return JSONResponse(logs, status_code=200)
