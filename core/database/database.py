@@ -195,7 +195,7 @@ class Database:
                 tid = model.tid
             uid = model.uid
 
-        ip: str = request.headers.get("X-Forwarded-For", request.client.host)
+        ip: str = request.headers.get("X-Forwarded-For") or request.client.host
 
         async with self._pool.acquire() as connection:
             await connection.execute(
