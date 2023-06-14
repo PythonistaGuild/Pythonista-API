@@ -89,6 +89,22 @@ class Database:
 
         return ApplicationModel(record=row)
 
+    async def fetch_applications(self, *, user_id: int) -> list[ApplicationModel] | None:
+        query: str = """
+        SELECT * FROM tokens
+        LEFT OUTER JOIN users u on u.uid = tokens.user_id
+        WHERE user_id = $1
+        """
+
+        async with self._pool.acquire() as connection:
+            rows = await connection.fetch(query, user_id)
+
+        if not rows:
+            return None
+
+        apps = [ApplicationModel(r) for r in rows]
+        return apps
+
     async def create_user(self, *, github_id: int, username: str) -> UserModel:
         uid: int = int((datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000) - core.EPOCH)
         bearer: str = core.generate_token(uid)
@@ -115,3 +131,43 @@ class Database:
 
         assert row
         return UserModel(record=row)
+
+    async def regenerate_application_token(self, *, user_id: int, old: str) -> ApplicationModel:
+        new: str = core.generate_token(user_id)
+
+        query: str = """
+        WITH updated_tokens AS (
+          UPDATE tokens SET token = $1 WHERE token = $2 RETURNING *
+        )
+        SELECT * FROM updated_tokens
+        JOIN users u ON u.uid = updated_tokens.user_id
+        """
+
+        async with self._pool.acquire() as connection:
+            row = await connection.fetchrow(query, new, old)
+
+        assert row
+        return ApplicationModel(record=row)
+
+    async def delete_application(self, *, token: str) -> None:
+        query: str = """DELETE FROM tokens WHERE token = $1"""
+
+        async with self._pool.acquire() as connection:
+            await connection.execute(query, token)
+
+    async def create_application(self, *, user_id: int, name: str, description: str) -> ApplicationModel:
+        token: str = core.generate_token(user_id)
+
+        query: str = """
+        WITH create_application AS (
+         INSERT INTO tokens(user_id, token_name, token_description, token) VALUES ($1, $2, $3, $4) RETURNING *   
+        )
+        SELECT * FROM create_application
+        JOIN users u ON u.uid = create_application.user_id
+        """
+
+        async with self._pool.acquire() as connection:
+            row = await connection.fetchrow(query, user_id, name, description, token)
+
+        assert row
+        return ApplicationModel(record=row)
