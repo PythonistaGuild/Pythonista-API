@@ -40,6 +40,5 @@ CREATE TABLE IF NOT EXISTS logs (
     method TEXT NOT NULL,
     route TEXT NOT NULL,
     body TEXT,
-    response_code INTEGER NOT NULL,
-    response TEXT
+    response_code INTEGER NOT NULL
 );
