@@ -179,7 +179,7 @@ class Database:
         query: str = """INSERT INTO logs VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"""
 
         try:
-            body: str | None = str(request._body.decode(encoding='UTF-8'))
+            body: str | None = str(request._body.decode(encoding='UTF-8'))  # pyright: ignore [reportPrivateUsage]
         except AttributeError:
             body = None
 
@@ -195,10 +195,12 @@ class Database:
                 tid = model.tid
             uid = model.uid
 
+        ip: str = request.headers.get("X-Forwarded-For", request.client.host)
+
         async with self._pool.acquire() as connection:
             await connection.execute(
                 query,
-                request.headers.get("X-Forwarded-For", request.client.host),
+                ip,
                 uid,
                 tid,
                 datetime.datetime.now(datetime.timezone.utc),
@@ -234,6 +236,6 @@ class Database:
 
         grouped = [(k, len(list(group))) for k, group in itertools.groupby(logs, lambda l: l.tid)]
         base = {'total': len(logs)}
-        base.update(grouped)
+        base.update(grouped)  # type: ignore
 
         return base
