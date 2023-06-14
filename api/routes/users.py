@@ -52,3 +52,15 @@ class Users(core.View):
         application: core.ApplicationModel = request.user.model
 
         return JSONResponse(application.as_dict(), status_code=200)
+
+    @core.route('/@me/applications')
+    @requires('bearer')
+    async def at_me_apps(self, request: Request) -> Response:
+        uid: int = request.user.model.uid
+        applications = await self.app.database.fetch_applications(user_id=uid)
+
+        if not applications:
+            applications = []
+
+        apps = [app.as_dict() for app in applications]
+        return JSONResponse(apps, status_code=200)
