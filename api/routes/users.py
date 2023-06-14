@@ -64,3 +64,21 @@ class Users(core.View):
 
         apps = [app.as_dict() for app in applications if not app.invalid]
         return JSONResponse(apps, status_code=200)
+
+    @core.route('/@me/logs')
+    @requires('bearer')
+    async def fetch_application_logs(self, request: Request) -> Response:
+        user: core.UserModel = request.user.model
+
+        logs = await self.app.database.fetch_user_logs(user_id=user.uid)
+
+        logs = [log.as_dict() for log in logs]
+        return JSONResponse(logs, status_code=200)
+
+    @core.route('/@me/logs/requests')
+    @requires('bearer')
+    async def fetch_user_requests(self, request: Request) -> Response:
+        user: core.UserModel = request.user.model
+
+        data = await self.app.database.fetch_all_user_uses(user_id=user.uid)
+        return JSONResponse(data, status_code=200)
