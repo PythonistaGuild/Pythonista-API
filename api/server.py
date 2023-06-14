@@ -28,6 +28,7 @@ from starlette.middleware.cors import CORSMiddleware
 import core
 
 from .middleware.auth import AuthBackend
+from .routes.applications import Applications
 from .routes.auth import Auth
 from .routes.users import Users
 
@@ -37,7 +38,7 @@ class Server(core.Application):
         self.session = session
         self.database = database
 
-        views: list[core.View] = [Users(self), Auth(self)]
+        views: list[core.View] = [Users(self), Auth(self), Applications(self)]
         middleware: list[Middleware] = [
             Middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*']),
             Middleware(AuthenticationMiddleware, backend=AuthBackend(self)),
