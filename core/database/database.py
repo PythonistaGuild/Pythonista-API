@@ -183,11 +183,6 @@ class Database:
         except AttributeError:
             body = None
 
-        try:
-            resp: str | None = str(response.body.decode(encoding='UTF-8'))
-        except AttributeError:
-            resp = None
-
         uid: int | None = None
         tid: int | None = None
 
