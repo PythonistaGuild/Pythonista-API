@@ -23,6 +23,7 @@ SOFTWARE.
 from __future__ import annotations
 
 import datetime
+import itertools
 import logging
 from typing import Any, Self
 
@@ -175,7 +176,7 @@ class Database:
         return ApplicationModel(record=row)
 
     async def add_log(self, *, request: Request, response: Response) -> None:
-        query: str = """INSERT INTO logs VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)"""
+        query: str = """INSERT INTO logs VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"""
 
         try:
             body: str | None = str(request._body.decode(encoding='UTF-8'))
@@ -212,5 +213,32 @@ class Database:
                 str(request.url.include_query_params()),
                 body,
                 response.status_code,
-                resp
             )
+
+    async def fetch_application_logs(self, *, token_id: int) -> list[LogModel]:
+        query: str = """SELECT * FROM logs WHERE appid = $1"""
+
+        async with self._pool.acquire() as connection:
+            rows = await connection.fetch(query, token_id)
+
+        logs = [LogModel(record=r) for r in rows]
+        return logs
+
+    async def fetch_user_logs(self, *, user_id: int) -> list[LogModel]:
+        query: str = """SELECT * FROM logs WHERE userid = $1"""
+
+        async with self._pool.acquire() as connection:
+            rows = await connection.fetch(query, user_id)
+
+        logs = [LogModel(record=r) for r in rows]
+        return logs
+
+    async def fetch_all_user_uses(self, *, user_id: int) -> dict[Any, int]:
+        logs = await self.fetch_user_logs(user_id=user_id)
+        logs.sort(key=lambda l: (l.tid is None, l.tid))
+
+        grouped = [(k, len(list(group))) for k, group in itertools.groupby(logs, lambda l: l.tid)]
+        base = {'total': len(logs)}
+        base.update(grouped)
+
+        return base

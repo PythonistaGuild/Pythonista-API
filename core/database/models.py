@@ -26,7 +26,7 @@ from typing import Any
 import asyncpg
 
 
-__all__ = ('UserModel', 'ApplicationModel')
+__all__ = ('UserModel', 'ApplicationModel', 'LogModel')
 
 
 class UserModel:
@@ -74,3 +74,32 @@ class ApplicationModel(UserModel):
         )
 
         return user
+
+
+class LogModel:
+    def __init__(self, record: asyncpg.Record) -> None:
+
+        self.ip: str = record['ip']
+        self.uid: int | None = record['userid']
+        self.tid: int | None = record['appid']
+        self.timestamp: datetime.datetime = record['accessed']
+        self.cf_ray: str | None = record['cf_ray']
+        self.cf_country: str | None = record['cf_country']
+        self.method: str = record['method']
+        self.route: str = record['route']
+        self.body: str | None = record['body']
+        self.response_code: int = record['response_code']
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            'ip': self.ip,
+            'uid': self.uid,
+            'tid': self.tid,
+            'timestamp': self.timestamp.isoformat(),
+            'cf_ray': self.cf_ray,
+            'cf_country': self.cf_country,
+            'method': self.method,
+            'route': self.route,
+            'body': self.body,
+            'response_code': self.response_code,
+        }
