@@ -25,6 +25,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+import asyncpg
 from starlette.authentication import requires
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
@@ -86,5 +87,9 @@ class Applications(core.View):
         elif len(apps) >= 25:
             return JSONResponse({'error': 'You have too many applications.'}, status_code=200)
 
-        app = await self.app.database.create_application(user_id=user.uid, name=name, description=description)
+        try:
+            app = await self.app.database.create_application(user_id=user.uid, name=name, description=description)
+        except asyncpg.UniqueViolationError:
+            return JSONResponse({'error': 'You already have an application with that name.'}, status_code=409)
+
         return JSONResponse(app.as_dict(), status_code=201)
