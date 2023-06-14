@@ -27,6 +27,8 @@ import logging
 from typing import Any, Self
 
 import asyncpg
+from starlette.requests import Request
+from starlette.responses import Response
 
 import core
 from core.config import config
@@ -150,7 +152,7 @@ class Database:
         return ApplicationModel(record=row)
 
     async def delete_application(self, *, token: str) -> None:
-        query: str = """DELETE FROM tokens WHERE token = $1"""
+        query: str = """UPDATE tokens SET invalid = true WHERE token = $1"""
 
         async with self._pool.acquire() as connection:
             await connection.execute(query, token)
@@ -171,3 +173,44 @@ class Database:
 
         assert row
         return ApplicationModel(record=row)
+
+    async def add_log(self, *, request: Request, response: Response) -> None:
+        query: str = """INSERT INTO logs VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)"""
+
+        try:
+            body: str | None = str(request._body.decode(encoding='UTF-8'))
+        except AttributeError:
+            body = None
+
+        try:
+            resp: str | None = str(response.body.decode(encoding='UTF-8'))
+        except AttributeError:
+            resp = None
+
+        uid: int | None = None
+        tid: int | None = None
+
+        try:
+            model: ApplicationModel | UserModel = request.user.model
+        except AttributeError:
+            pass
+        else:
+            if isinstance(model, ApplicationModel):
+                tid = model.tid
+            uid = model.uid
+
+        async with self._pool.acquire() as connection:
+            await connection.execute(
+                query,
+                request.headers.get("X-Forwarded-For", request.client.host),
+                uid,
+                tid,
+                datetime.datetime.now(datetime.timezone.utc),
+                request.headers.get("CF-RAY"),
+                request.headers.get("CF-IPCOUNTRY"),
+                request.method.upper(),
+                str(request.url.include_query_params()),
+                body,
+                response.status_code,
+                resp
+            )

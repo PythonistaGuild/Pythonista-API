@@ -58,7 +58,7 @@ class ApplicationModel(UserModel):
         self.description: str = record['token_description']
         self.token: str = record['token']
         self.verified: bool = record['verified']
-        self.uses: int = record['uses']
+        self.invalid: bool = record['invalid']
 
     def as_dict(self) -> dict[str, Any]:
         user = super().as_dict()
@@ -69,7 +69,7 @@ class ApplicationModel(UserModel):
                 'description': self.description,
                 'token': self.token,
                 'verified': self.verified,
-                'uses': self.uses,
+                'invalid': self.invalid
             }
         )
 

@@ -62,5 +62,5 @@ class Users(core.View):
         if not applications:
             applications = []
 
-        apps = [app.as_dict() for app in applications]
+        apps = [app.as_dict() for app in applications if not app.invalid]
         return JSONResponse(apps, status_code=200)

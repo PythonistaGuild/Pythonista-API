@@ -63,6 +63,9 @@ class AuthBackend(AuthenticationBackend):
             if not user:
                 return
 
+            if user.invalid:
+                return
+
             scopes.append('application')
             if user.verified:
                 scopes.append('verified')
