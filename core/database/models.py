@@ -26,7 +26,11 @@ from typing import Any
 import asyncpg
 
 
-__all__ = ('UserModel', 'ApplicationModel', 'LogModel')
+__all__ = (
+    'UserModel',
+    'ApplicationModel',
+    'LogModel',
+)
 
 
 class UserModel:
@@ -69,7 +73,7 @@ class ApplicationModel(UserModel):
                 'description': self.description,
                 'token': self.token,
                 'verified': self.verified,
-                'invalid': self.invalid
+                'invalid': self.invalid,
             }
         )
 
@@ -78,7 +82,6 @@ class ApplicationModel(UserModel):
 
 class LogModel:
     def __init__(self, record: asyncpg.Record) -> None:
-
         self.ip: str = record['ip']
         self.uid: int | None = record['userid']
         self.tid: int | None = record['appid']

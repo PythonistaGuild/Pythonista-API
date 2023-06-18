@@ -53,8 +53,10 @@ class Database:
     async def setup(self) -> Self:
         logger.info('Setting up Database.')
 
-        self._pool = await asyncpg.create_pool(dsn=config['DATABASE']['dsn'])  # type: ignore
-        assert self._pool
+        pool = await asyncpg.create_pool(dsn=config['DATABASE']['dsn'])
+        assert pool
+
+        self._pool = pool
 
         async with self._pool.acquire() as connection:
             with open('core/database/SCHEMA.sql', 'r') as schema:
@@ -163,7 +165,7 @@ class Database:
 
         query: str = """
         WITH create_application AS (
-         INSERT INTO tokens(user_id, token_name, token_description, token) VALUES ($1, $2, $3, $4) RETURNING *   
+         INSERT INTO tokens(user_id, token_name, token_description, token) VALUES ($1, $2, $3, $4) RETURNING *
         )
         SELECT * FROM create_application
         JOIN users u ON u.uid = create_application.user_id

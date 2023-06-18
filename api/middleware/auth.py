@@ -51,7 +51,6 @@ class AuthBackend(AuthenticationBackend):
         scopes: list[str] = []
 
         # Check if the user is using a bearer token...
-        user: core.UserModel | core.ApplicationModel | None
         user = await self.app.database.fetch_user(bearer=auth)
 
         if user:
