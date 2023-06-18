@@ -53,8 +53,10 @@ class Database:
     async def setup(self) -> Self:
         logger.info('Setting up Database.')
 
-        self._pool = await asyncpg.create_pool(dsn=config['DATABASE']['dsn'])  # type: ignore
-        assert self._pool
+        pool = await asyncpg.create_pool(dsn=config['DATABASE']['dsn'])
+        assert pool
+
+        self._pool = pool
 
         async with self._pool.acquire() as connection:
             with open('core/database/SCHEMA.sql', 'r') as schema:
