@@ -70,6 +70,9 @@ class AuthBackend(AuthenticationBackend):
             if user.verified:
                 scopes.append('verified')
 
+            if user.websockets:
+                scopes.append('websockets')
+
         if user.admin:
             scopes.append('admin')
 
