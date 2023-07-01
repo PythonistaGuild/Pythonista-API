@@ -24,7 +24,7 @@ import base64
 import secrets
 
 
-__all__ = ('EPOCH', 'generate_token')
+__all__ = ('EPOCH', 'generate_token', 'id_from_token')
 
 
 EPOCH: int = 1686613974737  # 2023-06-13 09:52:54.737703 * 1000 (Milliseconds) UTC
@@ -37,3 +37,17 @@ def generate_token(user_id: int) -> str:
     token: str = f'PAPI-{prefix}.{secret}'
 
     return token
+
+
+def id_from_token(token: str) -> int | None:
+    try:
+        encoded: str = token.removeprefix('PAPI-').split('.')[0]
+    except IndexError:
+        return
+
+    try:
+        id_: int = int(base64.urlsafe_b64decode(encoded).decode(encoding='UTF-8'))
+    except UnicodeDecodeError:
+        return None
+
+    return id_
