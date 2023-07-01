@@ -32,7 +32,7 @@ from starlette.routing import Route
 from starlette.types import Receive, Scope, Send
 
 
-__all__ = ('route', 'View', 'Application')
+__all__ = ('route', 'View', 'Application', 'WebsocketCloseCodes', 'WebsocketOPCodes')
 
 ResponseType: TypeAlias = Coroutine[Any, Any, Response]
 
@@ -202,8 +202,20 @@ class Application(Starlette):
 
         for route_ in view:
             path = f'/{self._prefix.lstrip("/")}{route_.path}' if self._prefix else route_.path
-            new = Route(path, endpoint=route_.endpoint, methods=route_.methods, name=route_.name)  # type: ignore # starlette types are wrong. They specify list but give a set...?
+            new = Route(path, endpoint=route_.endpoint, methods=route_.methods, name=route_.name)  # type: ignore
 
             self.router.routes.append(new)
 
         self._views.append(view)
+
+
+class WebsocketCloseCodes:
+
+    NORMAL: int = 1000
+    ABNORMAL: int = 1006
+    INVALID_SUBSCRIPTION: int = 4005
+
+
+class WebsocketOPCodes:
+
+    ACCEPTED: int = 0
