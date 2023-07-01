@@ -69,9 +69,7 @@ class Server(core.Application):
         token: str = websocket.headers['authorization']
         uid: int | None = core.id_from_token(token)
 
-        if not uid:
-            return
-
+        assert uid
         self.sockets[uid] = websocket
 
         # Filter out bad subscriptions...
