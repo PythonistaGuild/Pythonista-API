@@ -70,7 +70,7 @@ class Applications(core.View):
             name: str = data['name']
             description: str = data['description']
         except Exception as e:
-            logger.debug(f'Received bad JSON in "/api/applications/create": {e}')
+            logger.debug(f'Received bad JSON in "/applications/create": {e}')
             return JSONResponse({'error': 'Bad POST JSON Body.'}, status_code=400)
 
         if len(name) < 3 or len(name) > 32:
