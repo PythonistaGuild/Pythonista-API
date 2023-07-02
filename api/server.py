@@ -118,7 +118,9 @@ class Server(core.Application):
 
         # Remove the websocket and it's subscriptions...
         del self.sockets[uid]
-        for sub in subscriptions:
+
+        subscribed: list[str] = [sub for sub in self.subscription_sockets if uid in self.subscription_sockets[sub]]
+        for sub in subscribed:
             self.subscription_sockets[sub].remove(uid)
 
     def websocket_subscribe(self, *, uid: int, message: dict[str, Any]) -> dict[str, Any]:
