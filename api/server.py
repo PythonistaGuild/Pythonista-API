@@ -35,6 +35,7 @@ import core
 from .middleware.auth import AuthBackend
 from .routes.applications import Applications
 from .routes.auth import Auth
+from .routes.members import Members
 from .routes.users import Users
 
 
@@ -43,7 +44,7 @@ class Server(core.Application):
         self.session = session
         self.database = database
 
-        views: list[core.View] = [Users(self), Auth(self), Applications(self)]
+        views: list[core.View] = [Users(self), Auth(self), Applications(self), Members(self)]
         middleware: list[Middleware] = [
             Middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*']),
             Middleware(AuthenticationMiddleware, backend=AuthBackend(self)),
@@ -51,7 +52,7 @@ class Server(core.Application):
 
         self.sockets: dict[int, WebSocket] = {}
         self.subscription_sockets: dict[str, set[int]] = {
-            'discord_py_mod_log': set()
+            core.WebsocketSubscriptions.DPY_MOD_LOG: set()
         }
 
         super().__init__(
@@ -82,7 +83,7 @@ class Server(core.Application):
 
         # Send the initial accepted response. Includes user_id and subscriptions... op: 0
         data: dict[str, Any] = {
-            'op': core.WebsocketOPCodes.ACCEPTED,
+            'op': core.WebsocketOPCodes.HELLO,
             'user_id': uid,
             'subscriptions': subscriptions
         }
@@ -93,14 +94,73 @@ class Server(core.Application):
         while True:
 
             try:
-                message: dict[str | int, Any] = await websocket.receive_json()
+                message: dict[str, Any] = await websocket.receive_json()
             except WebSocketDisconnect:
                 break
 
-            # TODO: Process messages...
-            print(message)
+            op: str | None = message.get('op')
+
+            if op == core.WebsocketOPCodes.SUBSCRIBE:
+                response = self.websocket_subscribe(uid=uid, message=message)
+                await websocket.send_json(data=response)
+
+            elif op == core.WebsocketOPCodes.UNSUBSCRIBE:
+                response = self.websocket_unsubscribe(uid=uid, message=message)
+                await websocket.send_json(data=response)
+
+            else:
+                response = {
+                    'op': core.WebsocketOPCodes.NOTIFICATION,
+                    'type': core.WebsocketNotificationTypes.UNKNOWN_OP,
+                    'received': op
+                }
+                await websocket.send_json(data=response)
 
         # Remove the websocket and it's subscriptions...
         del self.sockets[uid]
         for sub in subscriptions:
             self.subscription_sockets[sub].remove(uid)
+
+    def websocket_subscribe(self, *, uid: int, message: dict[str, Any]) -> dict[str, Any]:
+        subs: list[str] = message.get('subscriptions', [])
+
+        # Filter out bad subscriptions...
+        valid: list[str] = list(self.subscription_sockets.keys())
+        subscriptions: list[str] = [sub for sub in subs if sub in valid]
+
+        for sub in subscriptions:
+            self.subscription_sockets[sub].add(uid)
+
+        subscribed: list[str] = [sub for sub in self.subscription_sockets if uid in self.subscription_sockets[sub]]
+
+        data: dict[str, Any] = {
+            'op': core.WebsocketOPCodes.NOTIFICATION,
+            'type': core.WebsocketNotificationTypes.SUBSCRIPTION_ADDED,
+            'user_id': uid,
+            'added': subscriptions,
+            'subscriptions': subscribed
+        }
+
+        return data
+
+    def websocket_unsubscribe(self, *, uid: int, message: dict[str, Any]) -> dict[str, Any]:
+        subs: list[str] = message.get('subscriptions', [])
+
+        # Filter out bad subscriptions...
+        valid: list[str] = list(self.subscription_sockets.keys())
+        subscriptions: list[str] = [sub for sub in subs if sub in valid]
+
+        for sub in subscriptions:
+            self.subscription_sockets[sub].remove(uid)
+
+        subscribed: list[str] = [sub for sub in self.subscription_sockets if uid in self.subscription_sockets[sub]]
+
+        data: dict[str, Any] = {
+            'op': core.WebsocketOPCodes.NOTIFICATION,
+            'type': core.WebsocketNotificationTypes.SUBSCRIPTION_REMOVED,
+            'user_id': uid,
+            'removed': subscriptions,
+            'subscriptions': subscribed
+        }
+
+        return data

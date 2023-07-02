@@ -32,7 +32,15 @@ from starlette.routing import Route
 from starlette.types import Receive, Scope, Send
 
 
-__all__ = ('route', 'View', 'Application', 'WebsocketCloseCodes', 'WebsocketOPCodes')
+__all__ = (
+    'route',
+    'View',
+    'Application',
+    'WebsocketCloseCodes',
+    'WebsocketOPCodes',
+    'WebsocketSubscriptions',
+    'WebsocketNotificationTypes'
+)
 
 ResponseType: TypeAlias = Coroutine[Any, Any, Response]
 
@@ -213,9 +221,30 @@ class WebsocketCloseCodes:
 
     NORMAL: int = 1000
     ABNORMAL: int = 1006
-    INVALID_SUBSCRIPTION: int = 4005
 
 
 class WebsocketOPCodes:
 
-    ACCEPTED: int = 0
+    # Sent...
+    HELLO: int = 0
+    EVENT: int = 1
+    NOTIFICATION: int = 2
+
+    # Received...
+    SUBSCRIBE: str = 'subscribe'
+    UNSUBSCRIBE: str = 'unsubscribe'
+
+
+class WebsocketSubscriptions:
+
+    DPY_MOD_LOG: str = 'discord_py_mod_log'
+
+
+class WebsocketNotificationTypes:
+
+    # Subscriptions...
+    SUBSCRIPTION_ADDED: str = 'subscription_added'
+    SUBSCRIPTION_REMOVED: str = 'subscription_removed'
+
+    # Failures...
+    UNKNOWN_OP: str = 'unknown_op'
