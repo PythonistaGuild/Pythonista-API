@@ -237,7 +237,7 @@ class WebsocketOPCodes:
 
 class WebsocketSubscriptions:
 
-    DPY_MOD_LOG: str = 'discord_py_mod_log'
+    DPY_MOD_LOG: str = 'dpy_modlog'
 
 
 class WebsocketNotificationTypes:
