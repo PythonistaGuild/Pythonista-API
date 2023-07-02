@@ -59,6 +59,7 @@ class ApplicationModel(UserModel):
         self.token: str = record['token']
         self.verified: bool = record['verified']
         self.websockets: bool = record['websockets']
+        self.member: bool = record['member']
         self.invalid: bool = record['invalid']
 
     def as_dict(self) -> dict[str, Any]:
@@ -71,6 +72,7 @@ class ApplicationModel(UserModel):
                 'token': self.token,
                 'verified': self.verified,
                 'websockets': self.websockets,
+                'member': self.member,
                 'invalid': self.invalid
             }
         )

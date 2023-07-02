@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS tokens (
     token TEXT NOT NULL,
     verified BOOLEAN NOT NULL DEFAULT false,
     websockets BOOLEAN NOT NULL DEFAULT false,
+    member BOOLEAN NOT NULL DEFAULT false,
     invalid BOOLEAN NOT NULL DEFAULT false,
     UNIQUE (user_id, token_name)
 );
