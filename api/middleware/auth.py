@@ -73,6 +73,9 @@ class AuthBackend(AuthenticationBackend):
             if user.websockets:
                 scopes.append('websockets')
 
+            if user.member:
+                scopes.append('member')
+
         if user.admin:
             scopes.append('admin')
 
