@@ -64,20 +64,23 @@ class Members(core.View):
         }
 
         count = 0
+        total = 0
         for subscriber in self.app.subscription_sockets[core.WebsocketSubscriptions.DPY_MOD_LOG]:
-            websocket: WebSocket = self.app.sockets[subscriber]
+            websockets: list[WebSocket] = list(self.app.sockets[subscriber].values())
 
+            total += len(websockets)
             payload['user_id'] = subscriber
 
-            try:
-                await websocket.send_json(data=payload)
-            except Exception as e:
-                logger.debug(f'Failed to send payload to websocket "{subscriber}": {e}')
-            else:
-                count += 1
+            for websocket in websockets:
+                try:
+                    await websocket.send_json(data=payload)
+                except Exception as e:
+                    logger.debug(f'Failed to send payload to a websocket for "{subscriber}": {e}')
+                else:
+                    count += 1
 
         to_send: dict[str, int] = {
-            'subscribers': len(self.app.subscription_sockets[core.WebsocketSubscriptions.DPY_MOD_LOG]),
+            'subscribers': total,
             'successful': count
         }
         return JSONResponse(to_send, status_code=200)

@@ -20,6 +20,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+import secrets
 from typing import Any
 
 import aiohttp
@@ -50,7 +51,7 @@ class Server(core.Application):
             Middleware(AuthenticationMiddleware, backend=AuthBackend(self)),
         ]
 
-        self.sockets: dict[int, WebSocket] = {}
+        self.sockets: dict[int, dict[str, WebSocket]] = {}
         self.subscription_sockets: dict[str, set[int]] = {
             core.WebsocketSubscriptions.DPY_MOD_LOG: set()
         }
@@ -71,7 +72,12 @@ class Server(core.Application):
         uid: int | None = core.id_from_token(token)
 
         assert uid
-        self.sockets[uid] = websocket
+
+        hash_ = secrets.token_urlsafe(8)
+        try:
+            self.sockets[uid][hash_] = websocket
+        except KeyError:
+            self.sockets[uid] = {hash_: websocket}
 
         # Filter out bad subscriptions...
         valid: list[str] = list(self.subscription_sockets.keys())
@@ -116,12 +122,8 @@ class Server(core.Application):
                 }
                 await websocket.send_json(data=response)
 
-        # Remove the websocket and it's subscriptions...
-        del self.sockets[uid]
-
-        subscribed: list[str] = [sub for sub in self.subscription_sockets if uid in self.subscription_sockets[sub]]
-        for sub in subscribed:
-            self.subscription_sockets[sub].remove(uid)
+        # Remove the websocket...
+        del self.sockets[uid][hash_]
 
     def websocket_subscribe(self, *, uid: int, message: dict[str, Any]) -> dict[str, Any]:
         subs: list[str] = message.get('subscriptions', [])
@@ -151,9 +153,16 @@ class Server(core.Application):
         # Filter out bad subscriptions...
         valid: list[str] = list(self.subscription_sockets.keys())
         subscriptions: list[str] = [sub for sub in subs if sub in valid]
+        removed: list[str] = []
 
         for sub in subscriptions:
-            self.subscription_sockets[sub].remove(uid)
+
+            try:
+                self.subscription_sockets[sub].remove(uid)
+            except KeyError:
+                pass
+            else:
+                removed.append(sub)
 
         subscribed: list[str] = [sub for sub in self.subscription_sockets if uid in self.subscription_sockets[sub]]
 
@@ -161,7 +170,7 @@ class Server(core.Application):
             'op': core.WebsocketOPCodes.NOTIFICATION,
             'type': core.WebsocketNotificationTypes.SUBSCRIPTION_REMOVED,
             'user_id': uid,
-            'removed': subscriptions,
+            'removed': removed,
             'subscriptions': subscribed
         }
 
