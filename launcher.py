@@ -33,7 +33,7 @@ async def main() -> None:
     async with aiohttp.ClientSession() as session, core.Database() as database:
         app: api.Server = api.Server(session=session, database=database)
 
-        config = uvicorn.Config(app, port=core.config['SERVER']['port'])
+        config = uvicorn.Config(app, port=core.config['SERVER']['port'], ws_ping_interval=10, ws_ping_timeout=None)
         server = uvicorn.Server(config)
         await server.serve()
 
