@@ -1,0 +1,19 @@
+version: "3"
+
+services:
+  api:
+    container_name: pythonista-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    extra_hosts:
+      - "database:host-gateway"
+    restart: unless-stopped
+    networks:
+      - main
+    volumes:
+      - "./config.toml:/app/config.toml:ro"
+
+networks:
+  main:
+    external: true
