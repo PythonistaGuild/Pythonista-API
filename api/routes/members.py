@@ -20,20 +20,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+
 from __future__ import annotations
 
 import logging
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from starlette.authentication import requires
-from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
-from starlette.websockets import WebSocket
 
 import core
 
-
 if TYPE_CHECKING:
+    from starlette.requests import Request
+    from starlette.websockets import WebSocket
+
     from api.server import Server
 
 
@@ -44,23 +45,23 @@ class Members(core.View):
     def __init__(self, app: Server) -> None:
         self.app = app
 
-    @core.route('/dpy/modlog', methods=['POST'])
-    @requires('member')
+    @core.route("/dpy/modlog", methods=["POST"])
+    @requires("member")
     async def post_dpy_modlog(self, request: Request) -> Response:
         application: core.ApplicationModel = request.user.model
 
         try:
             data = await request.json()
         except Exception as e:
-            logger.debug(f'Received bad JSON in "/members/dpy/modlog": {e}')
-            return JSONResponse({'error': 'Bad POST JSON Body.'}, status_code=400)
+            logger.debug('Received bad JSON in "/members/dpy/modlog": %s', e)
+            return JSONResponse({"error": "Bad POST JSON Body."}, status_code=400)
 
         payload: dict[str, Any] = {
-            'op': core.WebsocketOPCodes.EVENT,
-            'subscription': core.WebsocketSubscriptions.DPY_MOD_LOG,
-            'application': application.uid,
-            'application_name': application.name,
-            'payload': data
+            "op": core.WebsocketOPCodes.EVENT,
+            "subscription": core.WebsocketSubscriptions.DPY_MOD_LOG,
+            "application": application.uid,
+            "application_name": application.name,
+            "payload": data,
         }
 
         count = 0
@@ -69,18 +70,15 @@ class Members(core.View):
             websockets: list[WebSocket] = list(self.app.sockets[subscriber].values())
 
             total += len(websockets)
-            payload['user_id'] = subscriber
+            payload["user_id"] = subscriber
 
             for websocket in websockets:
                 try:
                     await websocket.send_json(data=payload)
                 except Exception as e:
-                    logger.debug(f'Failed to send payload to a websocket for "{subscriber}": {e}')
+                    logger.debug('Failed to send payload to a websocket for "%s": %s', subscriber, e)
                 else:
                     count += 1
 
-        to_send: dict[str, int] = {
-            'subscribers': total,
-            'successful': count
-        }
+        to_send: dict[str, int] = {"subscribers": total, "successful": count}
         return JSONResponse(to_send, status_code=200)

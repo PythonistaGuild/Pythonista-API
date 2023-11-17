@@ -29,7 +29,6 @@ from .logger import ColourFormatter
 from .tokens import *
 from .utils import *
 
-
 # Setup root logging formatter...
 handler: logging.StreamHandler[TextIO] = logging.StreamHandler()
 handler.setFormatter(ColourFormatter())

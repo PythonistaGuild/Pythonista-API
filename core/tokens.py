@@ -23,7 +23,6 @@ SOFTWARE.
 import base64
 import secrets
 
-
 __all__ = ('EPOCH', 'generate_token', 'id_from_token')
 
 

@@ -20,28 +20,34 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+
 from __future__ import annotations
 
 import datetime
 import itertools
 import logging
-from typing import Any, Self
+import pathlib
+from typing import TYPE_CHECKING, Any, Self
 
 import asyncpg
-from starlette.requests import Request
-from starlette.responses import Response
 
 import core
 from core.config import config
 
 from .models import *
 
+if TYPE_CHECKING:
+    from starlette.requests import Request
+    from starlette.responses import Response
 
-logger: logging.Logger = logging.getLogger(__name__)
+LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
 class Database:
     _pool: asyncpg.Pool[asyncpg.Record]
+
+    def __init__(self) -> None:
+        self.schema_file = pathlib.Path("core/databases/SCHEMA.sql")
 
     async def __aenter__(self) -> Self:
         await self.setup()
@@ -51,16 +57,16 @@ class Database:
         await self._pool.close()
 
     async def setup(self) -> Self:
-        logger.info('Setting up Database.')
+        LOGGER.info("Setting up Database.")
 
-        self._pool = await asyncpg.create_pool(dsn=config['DATABASE']['dsn'])  # type: ignore
+        self._pool = await asyncpg.create_pool(dsn=config["DATABASE"]["dsn"])  # type: ignore
         assert self._pool
 
         async with self._pool.acquire() as connection:
-            with open('core/database/SCHEMA.sql', 'r') as schema:
+            with self.schema_file.open() as schema:
                 await connection.execute(schema.read())
 
-        logger.info('Completed Database Setup.')
+        LOGGER.info("Completed Database Setup.")
 
         return self
 
@@ -163,7 +169,7 @@ class Database:
 
         query: str = """
         WITH create_application AS (
-         INSERT INTO tokens(user_id, token_name, token_description, token) VALUES ($1, $2, $3, $4) RETURNING *   
+         INSERT INTO tokens(user_id, token_name, token_description, token) VALUES ($1, $2, $3, $4) RETURNING *
         )
         SELECT * FROM create_application
         JOIN users u ON u.uid = create_application.user_id
@@ -179,7 +185,7 @@ class Database:
         query: str = """INSERT INTO logs VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"""
 
         try:
-            body: str | None = str(request._body.decode(encoding='UTF-8'))  # pyright: ignore [reportPrivateUsage]
+            body: str | None = str(request._body.decode(encoding="UTF-8"))  # pyright: ignore [reportPrivateUsage]
         except AttributeError:
             body = None
 
@@ -195,7 +201,7 @@ class Database:
                 tid = model.tid
             uid = model.uid
 
-        host: str | None = getattr(request.client, 'host', None)
+        host: str | None = getattr(request.client, "host", None)
         ip: str | None = request.headers.get("X-Forwarded-For", host)
 
         async with self._pool.acquire() as connection:
@@ -236,7 +242,7 @@ class Database:
         logs.sort(key=lambda l: (l.tid is None, l.tid))
 
         grouped = [(k, len(list(group))) for k, group in itertools.groupby(logs, lambda l: l.tid)]
-        base = {'total': len(logs)}
+        base = {"total": len(logs)}
         base.update(grouped)  # type: ignore
 
         return base

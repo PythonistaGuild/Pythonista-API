@@ -29,7 +29,6 @@ from starlette.requests import HTTPConnection
 
 import core
 
-
 if TYPE_CHECKING:
     from api.server import Server
 

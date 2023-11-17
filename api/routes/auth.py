@@ -20,35 +20,36 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+
 from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING
 
-from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
 import core
 
-
 if TYPE_CHECKING:
+    from starlette.requests import Request
+
     from api.server import Server
 
 
-logger: logging.Logger = logging.getLogger(__name__)
+LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
 class Auth(core.View):
     def __init__(self, app: Server) -> None:
         self.app = app
 
-    @core.route('/github', methods=['POST'])
+    @core.route("/github", methods=["POST"])
     async def github_auth(self, request: Request) -> Response:
         try:
             data = await request.json()
             code = data.get("code", None)
         except Exception as e:
-            logger.debug(f'Bad JSON body in "/auth/github": {e}')
+            LOGGER.debug('Bad JSON body in "/auth/github": %s', e)
 
             return JSONResponse({"error": "Bad JSON body passed"}, status_code=421)
 
@@ -57,7 +58,7 @@ class Auth(core.View):
 
         client_id: str = core.config["OAUTH"]["github_id"]
         client_secret: str = core.config["OAUTH"]["github_secret"]
-        url: str = core.config['OAUTH']['redirect']
+        url: str = core.config["OAUTH"]["redirect"]
 
         data = {
             "client_id": client_id,
@@ -72,9 +73,7 @@ class Auth(core.View):
             "Accept": "application/json",
         }
 
-        async with self.app.session.post(
-            "https://github.com/login/oauth/access_token", data=data, headers=headers
-        ) as resp:
+        async with self.app.session.post("https://github.com/login/oauth/access_token", data=data, headers=headers) as resp:
             resp.raise_for_status()
 
             data = await resp.json()
@@ -82,11 +81,9 @@ class Auth(core.View):
             try:
                 token = data["access_token"]
             except KeyError:
-                return JSONResponse({'error': 'Bad code query sent.'}, status_code=400)
+                return JSONResponse({"error": "Bad code query sent."}, status_code=400)
 
-        async with self.app.session.get(
-            "https://api.github.com/user", headers={"Authorization": f"Bearer {token}"}
-        ) as resp:
+        async with self.app.session.get("https://api.github.com/user", headers={"Authorization": f"Bearer {token}"}) as resp:
             resp.raise_for_status()
 
             data = await resp.json()
@@ -94,6 +91,6 @@ class Auth(core.View):
             username = data["name"] or data["login"]
 
         user = await self.app.database.refresh_or_create_user(github_id=userid, username=username)
-        logger.info(f'Refreshed Bearer: id={user.uid} github_id={user.github_id} username={username}')
+        LOGGER.info("Refreshed Bearer: id=%s github_id=%s username=%s", user.uid, user.github_id, username)
 
         return JSONResponse(user.as_dict(), status_code=200)

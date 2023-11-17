@@ -25,7 +25,6 @@ from typing import Any
 
 import asyncpg
 
-
 __all__ = ('UserModel', 'ApplicationModel', 'LogModel')
 
 

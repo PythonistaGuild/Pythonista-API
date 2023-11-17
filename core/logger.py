@@ -23,7 +23,6 @@ DEALINGS IN THE SOFTWARE.
 """
 import logging
 
-
 __all__ = ('ColourFormatter',)
 
 

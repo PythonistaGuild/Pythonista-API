@@ -30,7 +30,6 @@ from starlette.responses import JSONResponse, Response
 
 import core
 
-
 if TYPE_CHECKING:
     from api.server import Server
 

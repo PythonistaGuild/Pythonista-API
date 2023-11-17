@@ -31,7 +31,6 @@ from starlette.responses import Response
 from starlette.routing import Route
 from starlette.types import Receive, Scope, Send
 
-
 __all__ = (
     'route',
     'View',
