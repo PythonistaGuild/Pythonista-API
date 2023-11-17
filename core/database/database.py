@@ -47,7 +47,7 @@ class Database:
     _pool: asyncpg.Pool[asyncpg.Record]
 
     def __init__(self) -> None:
-        self.schema_file = pathlib.Path("core/databases/SCHEMA.sql")
+        self.schema_file = pathlib.Path("core/database/SCHEMA.sql")
 
     async def __aenter__(self) -> Self:
         await self.setup()
