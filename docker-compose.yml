@@ -3,9 +3,7 @@ version: "3"
 services:
   api:
     container_name: pythonista-api
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/pythonistaguild/pythonista-api:latest
     extra_hosts:
       - "database:host-gateway"
     restart: unless-stopped
